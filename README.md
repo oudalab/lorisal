@@ -1,5 +1,5 @@
 # LORISAL
-### _Library Online Repository Image Scraper and Labeller_
+### _Library Online Repository Image Scraper and Labeler_
 
 Sequence of program can roughly be seen in ordering of "Todo's" below.
 
