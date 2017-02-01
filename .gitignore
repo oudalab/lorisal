@@ -1,6 +1,16 @@
+# Data & Venv shouldn't be tracked #
+####################################
 /lorisal/data/
 /venv/
+
+# Temp Files from Daniel's Machines #
+#####################################
 /.idea/
+/lorisal/.ropeproject/
+*.swp
+*/__pycache__/
+*/*/__pycache__/
+
 
 # Compiled source #
 ###################
