@@ -1,5 +1,6 @@
 from setuptools import setup, find_packages
 
+
 setup(
     name = 'lorisal',
     version = '0.1',
