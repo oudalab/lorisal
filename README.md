@@ -67,7 +67,7 @@ _Libraries likely used_: TBD
 ## TODOs:
 - [x] Build basic skeleton for project
 - [ ] Implement thumbnail scraper
-- [ ] Implement SQLite models for repository data
+- [x] Implement SQLite models for repository data
 - [ ] Implement Image Identifier
 - [ ] Implement full-size image scraper
 - [ ] Implement Image Extractor (through either coordinates or saved image)
