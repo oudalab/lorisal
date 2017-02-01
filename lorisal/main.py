@@ -14,10 +14,11 @@ def main():
     if REBUILD:
         models.rebuild()
         repo = buildStructure()
-
-    if BUILD:
+    elif BUILD:
         models.build()
         repo = buildStructure()
+    else:
+        repo = models.Repository.get(models.Repository.shortname == "ouhsc")
 
     db = models.db
 
@@ -27,18 +28,17 @@ def main():
     # where it returns info a book or page at a
     # time so that it isn't tied to this db structure.
     if RUN_SCRAPER:
-        scraper.scrapeRepo(db, repo)
+        scraper.scrapeRepo(db, repo, models)
 
 
 def buildStructure():
 
     ouhsc = models.Repository(
         name='OU History of Science Collection',
+        shortname='ouhsc',
         url='https://repository.ou.edu/'
     )
     ouhsc.save()
-
-    testStructures(ouhsc)
 
     return ouhsc
 
@@ -47,6 +47,7 @@ def testStructures(repository):
 
     testBook = models.Book.create(
         repository=repository,
+        full_title="This is maybe like a really long title and something?",
         title="Test Book",
         uuid="testbookuuid"
     )
@@ -63,7 +64,7 @@ def testStructures(repository):
         image_id=0
     )
 
-    print(testImage.page.book.title)
+    print("Created: " + testImage.page.book.title)
 
 
 def testQuerys(repository):

@@ -12,6 +12,7 @@ class BaseModel(Model):
 
 class Repository(BaseModel):
     name = CharField(unique=True)
+    shortname = CharField(unique=True)
     url = CharField()
     description = TextField(null=True)
     last_scraped = TimestampField()
@@ -19,9 +20,11 @@ class Repository(BaseModel):
 
 class Book(BaseModel):
     repository = ForeignKeyField(Repository, related_name='books')
-    title = CharField()
-    uuid = CharField()
+    full_title = CharField()
+    title = CharField(null=True)
+    uuid = CharField(unique=True, primary_key=True)
     mods_metadata = TextField(null=True)
+    pages_scraped = BooleanField(default=False)
 
 
 class Page(BaseModel):
@@ -29,7 +32,7 @@ class Page(BaseModel):
     name = CharField()
     page_number = IntegerField()
     ocr_text = TextField(null=True)
-    uuid = CharField()
+    uuid = CharField(unique=True, primary_key=True)
     images_detected = BooleanField(default=False)
     full_size_downloaded = BooleanField(default=False)
 
