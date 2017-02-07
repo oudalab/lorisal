@@ -2,7 +2,7 @@ from scraper import scraper
 import models
 
 RUN_SCRAPER = True
-REBUILD = True
+REBUILD = False
 BUILD = False
 
 
@@ -54,7 +54,7 @@ def testStructures(repository):
 
     testPage = models.Page.create(
         book=testBook,
-        name="Test Page 1",
+        label="Test Page 1",
         page_number="1",
         uuid="testuuidpage1"
     )

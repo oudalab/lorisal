@@ -29,12 +29,13 @@ class Book(BaseModel):
 
 class Page(BaseModel):
     book = ForeignKeyField(Book, related_name='pages')
-    name = CharField()
+    label = CharField(null=True)
     page_number = IntegerField()
     ocr_text = TextField(null=True)
     uuid = CharField(unique=True, primary_key=True)
     images_detected = BooleanField(default=False)
     full_size_downloaded = BooleanField(default=False)
+    thumbs_downloaded = BooleanField(default=False)
 
 
 class ExtractedImage(BaseModel):

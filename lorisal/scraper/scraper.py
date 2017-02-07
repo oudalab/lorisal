@@ -1,11 +1,18 @@
 from bs4 import BeautifulSoup
 import urllib
 import urllib.request
+import requests
 import time
 import os
+import xmltodict
 
+# TODO: Should this just be defined inline?
 BOOKLISTURL = "https://repository.ou.edu/islandora/object/oku%253Ahos?page="
 
+# TODO: Can we move urllib to using requests?
+
+SCRAPE_BOOKLIST = False
+DOWNLOAD_THUMBS = True
 
 def scrapeRepo(database, repository, models):
 
@@ -34,33 +41,73 @@ def scrapeRepo(database, repository, models):
 
     imgurl_params = (imgurl_pre, imgurl_post, imgurl_zoom)
 
-    booklist = scrapeBookList(BOOKLISTURL)
-    booksInRepo = [book.uuid for book in models.Book.select()]
+    if SCRAPE_BOOKLIST:
+        booklist = scrapeBookList(BOOKLISTURL)
+        booksInRepo = [book.uuid for book in models.Book.select()]
 
-    for book in booklist:
-        print(book["full_title"])
-        if book["uuid"] not in booksInRepo:
-            models.Book.create(
-                repository=repository,
-                full_title=book['full_title'],
-                uuid=book['uuid']
-            )
-
-            print("added: " + book["uuid"])
+        for book in booklist:
+            # print(book["full_title"])
+            if book["uuid"] not in booksInRepo:
+                models.Book.create(
+                    repository=repository,
+                    full_title=book['full_title'],
+                    uuid=book['uuid'],
+                    mods_metadata=getBookMODSmetadata(book['uuid'])
+                )
 
     book_url_prefix = "https://repository.ou.edu/uuid/"
+    book_url_suffix = "/pages?page="
     query = models.Book.select().where(models.Book.pages_scraped == False)
     for book in query:
-        pages = scrapeBook(book_url_prefix, book.uuid)
+        print(book.full_title)
 
-#        for page in pages:
-#            models.Page.create(
-#            )
+        pages = scrapeBook(book_url_prefix + book.uuid + book_url_suffix)
+
+        ## If no pages, delete book, else, create Page for each page.
+        if len(pages):
+            book.delete_instance()
+        else:
+            for page in pages:
+                print(page['label'])
+                models.Page.create(
+                    book=book,
+                    label=page['label'],
+                    page_number=page['page_number'],
+                    uuid=page['uuid']
+                )
+
+            book.pages_scraped = True
+            book.save()
+
+    if DOWNLOAD_THUMBS:
+        query = models.Page.select().where(models.Page.thumb_downloaded == False)
+        for book in query:
+            print(book.full_title)
+
+            pages = scrapeBook(book_url_prefix + book.uuid + book_url_suffix)
+
+            ## If no pages, delete book, else, create Page for each page.
+            if len(pages):
+                book.delete_instance()
+            else:
+                for page in pages:
+                    print(page['label'])
+                    models.Page.create(
+                        book=book,
+                        label=page['label'],
+                        page_number=page['page_number'],
+                        uuid=page['uuid']
+                    )
+
+                book.pages_scraped = True
+                book.save()
+
     return
+
 
 def scrapeBookList(url):
     bookList = []
-    pageNum = 1
+    pageNum = 0
     while True:
         soup = BeautifulSoup(urllib.request.urlopen(url + str(pageNum)), "lxml")
         for thumb in soup.select(".islandora-basic-collection-thumb > a"):
@@ -70,17 +117,50 @@ def scrapeBookList(url):
             bookList.append(book)
 
         if soup.find("a", text="next"):
-            time.sleep(0.5)
+            time.sleep(0.1)
             pageNum += 1
         else:
             return bookList
 
 
-def scrapeBook(url_prefix, uuid):
-    return
+def getBookMODSmetadata(uuid):
+    modurl_prefix = "https://repository.ou.edu/uuid/"
+    modurl_suffix = "/datastream/MODS/download"
+    xml_meta = requests.get(modurl_prefix + uuid + modurl_suffix)
+
+    # Convert xml to a json
+    metadata = xmltodict.parse(xml_meta.text)
+
+    return metadata
+
+
+def scrapeBook(url):
+    pageList = []
+    pageNum = 0
+    pageOfBook = 1
+    while True:
+        soup = BeautifulSoup(urllib.request.urlopen(url + str(pageNum)), "lxml")
+        for thumb in soup.select(".islandora-object-thumb > a"):
+            uuid = thumb["href"]
+            uuid = uuid[6:]
+            page = {
+                "label": thumb["title"],
+                "uuid": uuid,
+                "page_number": pageOfBook
+            }
+            pageList.append(page)
+            pageOfBook += 1
+
+        if soup.find("a", text="next"):
+            time.sleep(0.1)
+            pageNum += 1
+        else:
+            return pageList
+
 
 def scrapePage():
     return
+
 
 def scrapePageOld(url, imgurl_params, pageNum):
     soup = BeautifulSoup(urllib.urlopen(url + str(pageNum)), "lxml")
