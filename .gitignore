@@ -8,6 +8,7 @@
 /.idea/
 /lorisal/.ropeproject/
 *.swp
+*.swo
 */__pycache__/
 */*/__pycache__/
 
