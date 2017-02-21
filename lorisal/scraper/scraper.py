@@ -11,7 +11,7 @@ BOOKLISTURL = "https://repository.ou.edu/islandora/object/oku%253Ahos?page="
 
 # TODO: Can we move urllib to using requests?
 
-SCRAPE_BOOKLIST = False
+SCRAPE_BOOKLIST = True
 DOWNLOAD_THUMBS = True
 
 
@@ -81,7 +81,7 @@ def scrapeRepo(database, repository, models):
 
     if DOWNLOAD_THUMBS:
         print("Start Thumb Scrape")
-        imgurl_zoom = 2
+        imgurl_zoom = 3
         imgurl_params = (imgurl_pre, imgurl_post, imgurl_zoom)
 
         query = models.Page.select().where(
