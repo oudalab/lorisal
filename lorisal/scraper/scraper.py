@@ -109,6 +109,7 @@ def scrapeRepo(database, repository, models):
             if scrapePage(imgurl_params, page.uuid, book_path):
                 page.thumbs_downloaded = True
                 page.save()
+                time.sleep(1)
             else:
                 print("Save Error.")
 
@@ -167,6 +168,7 @@ def scrapeRepo(database, repository, models):
         "0f0477f6-b110-5534-836c-18a7a2a9b3dd", # liber chronicarum
         "6add0b46-1a19-5126-8883-0ce24cd4ee9c", #
         "483b0173-e99a-5f05-92bd-96d94d83a959", #
+
 
 
     ]
