@@ -5,14 +5,20 @@ import requests
 import time
 import os
 import xmltodict
+import math
+from PIL import Image
+from scraper.image_mining.figure_extraction import FigureExtractor
+from scraper.image_mining.utils import open_image
 
 # TODO: Should this just be defined inline?
 BOOKLISTURL = "https://repository.ou.edu/islandora/object/oku%253Ahos?page="
 
 # TODO: Can we move urllib to using requests?
 
-SCRAPE_BOOKLIST = True
-DOWNLOAD_THUMBS = True
+SCRAPE_BOOKLIST = False
+DOWNLOAD_THUMBS = False
+IDENTIFY_PHOTOS = False
+DOWNLOAD_FULL = True
 
 
 def scrapeRepo(database, repository, models):
@@ -105,6 +111,98 @@ def scrapeRepo(database, repository, models):
                 page.save()
             else:
                 print("Save Error.")
+
+    if IDENTIFY_PHOTOS:
+        imgurl_zoom = 3
+
+        # paramaters established in jupyter notebook tests
+        lm_dilation_coef = 0.99387826
+        lm_dilation_intercept = -10.52423863
+        lm_erosion_coef = -2.82356956
+        lm_erosion_intercept = 49.1012299
+
+        # Identify photos
+        query = models.Page.select().where(models.Page.thumbs_downloaded == True)
+
+        for page in query:
+            keepcharacters = (' ', '.', '_')
+            book_title = "".join(
+                c for c in page.book.full_title
+                if c.isalnum() or c in keepcharacters).rstrip()
+
+            # print(book_title + "/" + page.uuid)
+
+            book_path = os.path.join(
+                            images_path,
+                            book_title
+                        )
+
+            page_path = os.path.join(book_path, str( imgurl_zoom ) )
+            image_path = os.path.join(page_path, page.uuid)+".jpg"
+
+            with Image.open(image_path) as img:
+                size = math.log(img.size[0]*img.size[1])
+
+            #set erosion and dilation
+            erosion = int( size * lm_erosion_coef + lm_erosion_intercept)
+            dilation = int( size * lm_dilation_coef + lm_dilation_intercept)
+
+            detected = embeddedImageDetection( image_path, erosion, dilation)
+
+            if detected:
+                page.images_detected = True
+            else:
+                page.images_detected = False
+
+            page.save()
+
+
+    book_skip_list = [
+        "fddbe842-385b-5171-92ed-e8398074075d",
+        "1015dee4-4ea2-58ec-b7ba-d0d89c440800",
+        "aa087481-c112-516a-9c07-f2359b253581",
+        "268f04ec-b56f-55e4-a96b-17ace0f13c28",
+        "1fce7d3b-1b4a-540e-91f3-842a063f8d22",
+        "9358b917-8858-5345-9c5b-f2781e07b7ce",
+        "0f0477f6-b110-5534-836c-18a7a2a9b3dd", # liber chronicarum
+        "6add0b46-1a19-5126-8883-0ce24cd4ee9c", #
+        "483b0173-e99a-5f05-92bd-96d94d83a959", #
+
+
+    ]
+
+    if DOWNLOAD_FULL:
+        print("Start Full Scrape")
+        imgurl_zoom = 10
+        imgurl_params = (imgurl_pre, imgurl_post, imgurl_zoom)
+
+        query = models.Page.select().where(
+             models.Page.images_detected == True
+        )
+        for page in query:
+
+            keepcharacters = (' ', '.', '_')
+            book_title = "".join(
+                c for c in page.book.full_title
+                if c.isalnum() or c in keepcharacters).rstrip()
+
+            print(book_title + "/" + page.uuid)
+            book_path = os.path.join(
+                            images_path,
+                            book_title
+                        )
+            print("Book uuid: " + page.book.uuid );
+
+            if page.full_size_downloaded:
+                print("Full Size Already Downloaded.")
+            elif page.book.uuid in book_skip_list:
+                print("Problem book -- skipped")
+            elif scrapePage(imgurl_params, page.uuid, book_path):
+                page.full_size_downloaded = True
+                page.save()
+            else:
+                print("Save Error. Book UUID: " + str( page.book.uuid ))
+
     return
 
 
@@ -135,6 +233,7 @@ def getBookMODSmetadata(uuid):
     metadata = xmltodict.parse(xml_meta.text)
 
     return metadata
+
 
 
 def scrapeBook(url):
@@ -182,6 +281,31 @@ def scrapePage(url_params, uuid, book_path):
             return 1
     else:
         return 0
+
+
+def embeddedImageDetection( image_path, erosion_size, dilation_size):
+
+    params = {
+                "canny_threshold": 0, # No Luck Setting this at 1 or above
+                "erosion_element": "rectangle",
+                "erosion_size": erosion_size, # Larger triggers more images
+                "dilation_element": "rectangle",
+                "dilation_size": dilation_size, # Smaller Triggers more images
+            }
+
+    extractor = FigureExtractor(**params)
+
+    try:
+        base_name, source_image = open_image(image_path)
+    except:
+        print("Open Error for %s"%(filename))
+        pass
+
+
+    for fig in extractor.find_figures(source_image):
+        return True
+
+    return False
 
 
 def scrapePageOld(url, imgurl_params, pageNum):
