@@ -109,7 +109,7 @@ def scrapeRepo(database, repository, models):
             if scrapePage(imgurl_params, page.uuid, book_path):
                 page.thumbs_downloaded = True
                 page.save()
-                time.sleep(1)
+                time.sleep(2)
             else:
                 print("Save Error.")
 
@@ -159,15 +159,15 @@ def scrapeRepo(database, repository, models):
 
 
     book_skip_list = [
-        "fddbe842-385b-5171-92ed-e8398074075d",
-        "1015dee4-4ea2-58ec-b7ba-d0d89c440800",
-        "aa087481-c112-516a-9c07-f2359b253581",
-        "268f04ec-b56f-55e4-a96b-17ace0f13c28",
-        "1fce7d3b-1b4a-540e-91f3-842a063f8d22",
-        "9358b917-8858-5345-9c5b-f2781e07b7ce",
-        "0f0477f6-b110-5534-836c-18a7a2a9b3dd", # liber chronicarum
-        "6add0b46-1a19-5126-8883-0ce24cd4ee9c", #
-        "483b0173-e99a-5f05-92bd-96d94d83a959", #
+        # "fddbe842-385b-5171-92ed-e8398074075d",
+        # "1015dee4-4ea2-58ec-b7ba-d0d89c440800",
+        # "aa087481-c112-516a-9c07-f2359b253581",
+        # "268f04ec-b56f-55e4-a96b-17ace0f13c28",
+        # "1fce7d3b-1b4a-540e-91f3-842a063f8d22",
+        # "9358b917-8858-5345-9c5b-f2781e07b7ce",
+        # "0f0477f6-b110-5534-836c-18a7a2a9b3dd", # liber chronicarum
+        # "6add0b46-1a19-5126-8883-0ce24cd4ee9c", #
+        # "483b0173-e99a-5f05-92bd-96d94d83a959", #
 
 
 

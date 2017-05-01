@@ -43,12 +43,13 @@ class ExtractedImage(BaseModel):
     image_id = IntegerField()
     tags = TextField(null=True)
     label = TextField(null=True)
-    page_coordinate_TL = IntegerField(null=True)
-    page_coordinate_TR = IntegerField(null=True)
-    page_coordinate_BL = IntegerField(null=True)
-    page_coordinate_BR = IntegerField(null=True)
+    page_coordinate_TL_x = IntegerField(null=True)
+    page_coordinate_TL_y = IntegerField(null=True)
+    page_coordinate_BR_x = IntegerField(null=True)
+    page_coordinate_BR_y = IntegerField(null=True)
 
 _tables = [Repository, Book, Page, ExtractedImage]
+
 
 def build():
     db.connect()

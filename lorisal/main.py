@@ -1,7 +1,11 @@
-from scraper import scraper
+# from scraper import scraper
+# from extractor import extractor
+from ocr import ocr
 import models
 
-RUN_SCRAPER = True
+RUN_SCRAPER = False
+RUN_OCR = True
+RUN_EXTRACTOR = False
 REBUILD = False
 BUILD = False
 
@@ -29,6 +33,12 @@ def main():
     # time so that it isn't tied to this db structure.
     if RUN_SCRAPER:
         scraper.scrapeRepo(db, repo, models)
+
+    if RUN_EXTRACTOR:
+        extractor.extractFigures(db, repo, models)
+
+    if RUN_OCR:
+        ocr.ocrRepo(db, repo, models)
 
 
 def buildStructure():
