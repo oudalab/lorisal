@@ -15,7 +15,7 @@ the imagery. The first pass in the scraper will download all imagery at a thumbn
 downloading full resolution imagery. The scraper will also extract whatever metadata it can about objects in the
 repository.
 
-_Libraries likely used_: Peewee for db, BeautifulSoup for scraping 
+_Libraries used_: Peewee for db, BeautifulSoup for scraping 
 
 ### 2. Image Identifier
 
@@ -24,7 +24,7 @@ This module will take an input an image file (ideally of thumbnail size) and ide
  The presence of imagery will be noted in the database so that the main program can go back and know which pages of a 
  book need to be worked on, downloaded at full resolution, etc.
 
-_Libraries likely used_: OpenCV?
+_Libraries used_: OpenCV, code from https://github.com/acdha/image-mining
 ### 3. Image Extractor
 
 This module will identify the boundaries of imagery that needs to be extracted and isolated from the book scan. At this
@@ -32,46 +32,39 @@ point it's unclear whether it's necessary to save the extracted images to a disc
 write the corner coordinates to the db. (Extracting images could have other uses and also would make other modules not
 need to do image processing, and since most pages in a book don't have imagery, the disk usage is probably negligible.)
 
-_Libraries likely used_: OpenCV
+_Libraries used_: OpenCV, code from https://github.com/acdha/image-mining
 
-### 4. Tagger
+### 4. OCR and Knowledge Gathering
 
-This module will use ML techniques to identify objects in extracted imagery and then tag the image as such. Recording
-not only the identified objects, but also their coordinates could be useful for identifying relationships of the objects
-in the labeling stage, but more research is yet to be done here.
+This module will take the page containing the extracted image and do optical character recognition on it
+With the source text, we can search for images.
+_Future_: Future work could use adjacent pages, use text summarizers, and use the coordinates for where text was detected to better refine image identification and extraction.
 
-_Libraries likely used_: YOLO3000? Keras?
+_Libraries used_: pyocr and Tesseract
 
-### 5. OCR and Knowledge Gathering
-
-This module will take pages adjacent to an extracted image and try to do optical character recognition so we can use the
-source text to better label the image. Text summarizers may be helpful here.
-
-_Libraries likely used_: TBD
-
-### 6. Image Labeler
+### 5. Image Labeler
 
 Using the previously identified objects (tags), metadata and knwowledge garnered by the OCR module, this module can take
 the info that has been recorded in the db and attempt to create an english sentence describing the scene. This is very
 much down the line and the workflow here could change significantly.
 
-_Libraries likely used_: TBD
+_Libraries used_: Tensorflow model img2txt
 
-### 7. Searcher
+### 6. Searcher
 
-This module will allow the user to search for imagery based on tags, labels and OCR data. Maybe by this point we can
-incorporate an english, full utterance style of search even if we want to be fancy.
+This module will allow the user to search for imagery based on labels and OCR data. 
+_Future_: Natural language search, filters based of book meta-data
 
-_Libraries likely used_: TBD
+_Libraries used_: Peewee's SQLiteExt package for Full Text Search
 
 ## TODOs:
 - [x] Build basic skeleton for project
-- [ ] Implement thumbnail scraper
+- [x] Implement thumbnail scraper
 - [x] Implement SQLite models for repository data
-- [ ] Implement Image Identifier
-- [ ] Implement full-size image scraper
-- [ ] Implement Image Extractor (through either coordinates or saved image)
-- [ ] Implement Object Recognition and Tagger
-- [ ] Implement OCR, Summarizer, any knowledge gathering "external" of the image itself
+- [x] Implement Image Identifier
+- [x] Implement full-size image scraper
+- [x] Implement Image Extractor (through either coordinates or saved image)
 - [ ] Implement Image Labeler
+- [x] Implement OCR (info in db, but need to rewrite the module)
+- [ ] Implement Full Text Search on Labels and OCR content
 
