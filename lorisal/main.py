@@ -1,11 +1,13 @@
 # from scraper import scraper
 # from extractor import extractor
 from ocr import ocr
+from labeler import labeler
 import models
 
 RUN_SCRAPER = False
 RUN_OCR = True
 RUN_EXTRACTOR = False
+RUN_LABELER = False
 REBUILD = False
 BUILD = False
 
@@ -15,6 +17,7 @@ def main():
     # If we need to rebuild the models crudely, this will do so without altering
     # the tables, but will drop all tables and then create them anew. Otherwise
     # it'll just build the tables if they don't exist.
+
     if REBUILD:
         models.rebuild()
         repo = buildStructure()
@@ -31,14 +34,18 @@ def main():
     # to have it be a generator object returning Named Tuples
     # where it returns info a book or page at a
     # time so that it isn't tied to this db structure.
-    if RUN_SCRAPER:
-        scraper.scrapeRepo(db, repo, models)
 
-    if RUN_EXTRACTOR:
-        extractor.extractFigures(db, repo, models)
+    # if RUN_SCRAPER:
+    #   scraper.scrapeRepo(db, repo, models)
+
+    #  if RUN_EXTRACTOR:
+    #      extractor.extractFigures(db, repo, models)
 
     if RUN_OCR:
         ocr.ocrRepo(db, repo, models)
+
+    if RUN_LABELER:
+        labeler.labelExtracts(db, repo, models)
 
 
 def buildStructure():

@@ -1,20 +1,88 @@
 from PIL import Image
 
+import sys
+import codecs
 import pyocr
 import pyocr.builders
 import os
 
-# TODO: REWRITE THIS CODE! ReWritten after losing original file.
+# TODO: TEST THIS CODE! ReWritten from notebooks after losing original file.
+
+DELETE_EXISTING = False
+SAVE_HOCR = True
+
 
 def ocrRepo(database, repository, models):
 
+    keepcharacters = (' ', '.', '_')
     images_path = os.path.join(
                     os.getcwd(),
                     "data",
                     repository.shortname
                 )
 
+    imgurl_zoom = 10
     tool = state_OCR_tool()
+
+    query = models.ExtractedImage.select()
+
+    for extractedImage in query:
+
+        page = extractedImage.page
+
+        book_title = "".join(
+            c for c in page.book.full_title
+            if c.isalnum() or c in keepcharacters).rstrip()
+
+        book_path = os.path.join(
+                    images_path,
+                    book_title
+                )
+        page_path = os.path.join(book_path, str(imgurl_zoom))
+        image_path = os.path.join(page_path, page.uuid)+".jpg"
+
+        # TODO: Test if OCR exists in db
+        ocrExists = False
+
+        if ocrExists:
+            if DELETE_EXISTING:
+                # if the image has ocr info in db, rm it and hocr if exists.
+                page.ocr_text = None
+                # TODO: Delete hOCR file if exists
+            else:
+                continue
+
+        meta = eval(page.book.mods_metadata)
+
+        try:
+            lang = meta["mods"]["language"][0]["languageTerm"]["#text"]
+        except:
+            try:
+                lang = meta["mods"]["language"]["languageTerm"]["#text"]
+            except:
+                lang = "eng"
+
+        # DO OCR AND SAVE TO page.
+        line_and_word_boxes = tool.image_to_string(
+                Image.open(image_path), lang=lang,
+                builder=tool
+        )
+
+        txt = ""
+        for line in line_and_word_boxes:
+            txt += line.content
+
+        page.ocr_text = txt
+        page.save()
+
+        if SAVE_HOCR:
+
+            extract_path = os.path.join(book_path, "extract")
+            hocr_path = os.path.join(extract_path, page.uuid)+".html"
+
+            with codecs.open(
+                        hocr_path, 'w', encoding='utf-8') as file_descriptor:
+                    tool.write_file(file_descriptor, line_and_word_boxes)
 
 
 def state_OCR_tool():
@@ -27,6 +95,10 @@ def state_OCR_tool():
     print("Will use tool '%s'" % (tool.get_name()))
     # Ex: Will use tool 'libtesseract'
     return tool
+
+
+# The following are tools written for image detection tests, unused but
+# could be useful for sanity checks later on.
 
 
 def boxArea(coords):

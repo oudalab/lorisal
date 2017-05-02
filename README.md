@@ -10,10 +10,11 @@ This module is take as input necessary information about the Islandora repositor
 hardcoded to a specific repository. The tradeoff in flexibility here will allow us to more quickly get to implementing
 other modules.
 
-The scraper will save images in a directory structure in the /data/ folder and create an SQLite .db file that catalogs
-the imagery. The first pass in the scraper will download all imagery at a thumbnail size, and the second usage will be
-downloading full resolution imagery. The scraper will also extract whatever metadata it can about objects in the
-repository.
+The scraper will save images in a directory structure in the /data/ folder
+and create an SQLite .db file that catalogs the imagery. The first pass in
+the scraper will download all imagery at a thumbnail size, and the second
+usage will be downloading full resolution imagery. The scraper will also
+extract whatever metadata it can about objects in the repository.
 
 _Libraries used_: Peewee for db, BeautifulSoup for scraping 
 

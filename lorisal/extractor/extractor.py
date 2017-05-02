@@ -53,7 +53,7 @@ def extractFigures(database, repository, models):
 
             images_detected = embeddedImageExtraction(image_path, 9, 1)
 
-            # TODO: CHECK IF PREVIOUSLY FOUND!
+            # TODO: CHECK IF PREVIOUSLY FOUND AND NOT SET TO REMOVE!
             for i, box_coord in enumerate(images_detected):
                 embedded = models.ExtractedImage.create(
                     page=page,
