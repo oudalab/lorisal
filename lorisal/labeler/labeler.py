@@ -1,7 +1,27 @@
 import os
+from subprocess import check_output
+import re
 
 WRITE_LABELS = False
 
+def run_classification(inputFiles):
+    class_list = []
+    for fil in inputFiles:
+        imageObject = {}
+        imageObject["filepath"] = fil
+		
+        classification_output = check_output('bazel-bin/im2txt/run_inference  --checkpoint_path=../../model/model.new.ckpt-2000000   --vocab_file=../../model/word_counts2.txt   --input_files=' + fil, shell=True)	
+
+        captions = []
+        p = re.compile("\d\) ([\w\s]+)")
+        for match in re.findall(p, str(test)):
+            captions.append(match)
+
+        imageObject["captions"] = captions
+
+        class_list.append(imageObject)
+
+    return class_list
 
 def labelExtracts(database, repository, models):
 
