@@ -1,9 +1,8 @@
 from peewee import *
-from playhouse.sqlite_ext import *
 
-DATABASE = './data/repos.db'
+DATABASE = './data/repos_halfocr.db'
 
-db = SqliteExtDatabase(DATABASE, threadlocals=True)
+db = SqliteDatabase(DATABASE)
 
 
 class BaseModel(Model):
@@ -19,7 +18,7 @@ class Repository(BaseModel):
     last_scraped = TimestampField()
 
     def __unicode__(self):
-        return self.shortname
+        return self.name
 
 
 class Book(BaseModel):
@@ -31,7 +30,7 @@ class Book(BaseModel):
     pages_scraped = BooleanField(default=False)
 
     def __unicode__(self):
-        return self.title
+        return self.full_title
 
 
 class Page(BaseModel):
@@ -45,7 +44,7 @@ class Page(BaseModel):
     thumbs_downloaded = BooleanField(default=False)
 
     def __unicode__(self):
-        return self.book.title[:25] + " - " + str(self.page_number)
+        return self.uuid
 
 
 class ExtractedImage(BaseModel):
@@ -58,25 +57,7 @@ class ExtractedImage(BaseModel):
     page_coordinate_BR_x = IntegerField(null=True)
     page_coordinate_BR_y = IntegerField(null=True)
 
-
-class FTSPage(FTSModel):
-    page_uuid = CharField()
-    ocr_text = TextField()
-
-    class Meta:
-        database = db
-
-
-class FTSExtractedImage(FTSModel):
-    extract_id = IntegerField()
-    tags = TextField(null=True)
-    label = TextField(null=True)
-
-    class Meta:
-        database = db
-
-
-_tables = [Repository, Book, Page, ExtractedImage, FTSPage, FTSExtractedImage]
+_tables = [Repository, Book, Page, ExtractedImage]
 
 
 def build():

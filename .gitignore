@@ -4,6 +4,9 @@
 /venv/
 /scratch_notebooks/open-cv-extraction/output/
 /test_data/
+*.h5
+*.ckpt*
+*.db
 
 # Temp Files from Daniel's Machines #
 #####################################

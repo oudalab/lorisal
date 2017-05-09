@@ -1,9 +1,9 @@
 from peewee import *
 from playhouse.sqlite_ext import *
 
-DATABASE = './data/repos.db'
+DATABASE = './data/repos_halfocr_windex.db'
 
-db = SqliteExtDatabase(DATABASE, threadlocals=True)
+db = SqliteExtDatabase(DATABASE, threadlocals=False)
 
 
 class BaseModel(Model):
@@ -31,7 +31,7 @@ class Book(BaseModel):
     pages_scraped = BooleanField(default=False)
 
     def __unicode__(self):
-        return self.title
+        return self.full_title
 
 
 class Page(BaseModel):
@@ -47,7 +47,6 @@ class Page(BaseModel):
     def __unicode__(self):
         return self.book.title[:25] + " - " + str(self.page_number)
 
-
 class ExtractedImage(BaseModel):
     page = ForeignKeyField(Page, related_name='extracts')
     image_id = IntegerField()
@@ -57,7 +56,6 @@ class ExtractedImage(BaseModel):
     page_coordinate_TL_y = IntegerField(null=True)
     page_coordinate_BR_x = IntegerField(null=True)
     page_coordinate_BR_y = IntegerField(null=True)
-
 
 class FTSPage(FTSModel):
     page_uuid = CharField()
@@ -76,7 +74,7 @@ class FTSExtractedImage(FTSModel):
         database = db
 
 
-_tables = [Repository, Book, Page, ExtractedImage, FTSPage, FTSExtractedImage]
+_tables = [Repository, Book, Page, ExtractedImage]
 
 
 def build():

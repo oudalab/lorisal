@@ -1,0 +1,17 @@
+{% extends 'admin/model/modals/details.html' %}
+
+{% block body %}
+	{{ super() }}
+
+	{% set book_path = "/data/" %}
+	{% set book_path = book_path + get_value(model,"page").book.repository.shortname %}
+	{% set book_path = book_path + '/' +  get_value(model,"page").book.title %}
+	{% set book_path = book_path + '/extract/' %}
+	{% set book_file = '' + get_value(model,"page").uuid + '_' %}
+	{% set book_file = book_file + get_value(model,"page_coordinate_TL_x")|string + '-'  %}
+	{% set book_file = book_file + get_value(model,"page_coordinate_TL_y")|string + '-'  %}
+	{% set book_file = book_file + get_value(model,"page_coordinate_BR_x")|string + '-'  %}
+	{% set book_file = book_file + get_value(model,"page_coordinate_BR_y")|string + '.jpg'  %}
+	<img src="{{book_path + book_file}}" width='550' />
+
+{% endblock %}

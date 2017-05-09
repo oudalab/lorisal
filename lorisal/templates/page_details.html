@@ -1,0 +1,12 @@
+{% extends 'admin/model/details.html' %}
+
+{% block body %}
+	<h1>Page Details View</h1>
+	{{ super() }}
+	{% set book_path = "/data/" %}
+	{% set book_path = book_path + get_value(model,"book").repository.shortname %}
+	{% set book_path = book_path + '/' +  get_value(model,"book").title %}
+	{% set book_path = book_path + '/3/' %}
+	{% set book_file = '' + get_value(model,"uuid") + '.jpg' %}
+	<img src="{{book_path + book_file}}" />
+{% endblock %}

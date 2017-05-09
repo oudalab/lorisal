@@ -2,28 +2,20 @@ import os
 from subprocess import check_output
 import re
 
-WRITE_LABELS = False
+WRITE_LABELS = True
 
-def run_classification(inputFiles):
-    class_list = []
-    for fil in inputFiles:
-        imageObject = {}
-        imageObject["filepath"] = fil
-		
-        classification_output = check_output('bazel-bin/im2txt/run_inference  --checkpoint_path=../../model/model.new.ckpt-2000000   --vocab_file=../../model/word_counts2.txt   --input_files=' + fil, shell=True)	
+CHECKPOINT_PATH = "/home/eth/storage/models/im2txt/im2txt/data/downloaded_models/psycharo/model.ckpt-2000000"
+VOCAB_FILE = "/home/eth/storage/models/im2txt/im2txt/data/downloaded_models/psycharo/word_counts2.txt"
+RUN_INFERENCE_PATH = "/home/eth/storage/models/im2txt/bazel-bin/im2txt/run_inference"
 
-        captions = []
-        p = re.compile("\d\) ([\w\s]+)")
-        for match in re.findall(p, str(test)):
-            captions.append(match)
-
-        imageObject["captions"] = captions
-
-        class_list.append(imageObject)
-
-    return class_list
+# Larger Batches reduce number of times TF needs to load model into memory,
+# but also makes "saving" progress to database less frequent and there is a
+# limit to how many can be passed as args to the im2txt script
+BATCH_SIZE = 100
 
 def labelExtracts(database, repository, models):
+
+    ExtractedImage = models.ExtractedImage
 
     images_path = os.path.join(
                     os.getcwd(),
@@ -33,12 +25,11 @@ def labelExtracts(database, repository, models):
 
     if WRITE_LABELS:
         keepcharacters = (' ', '.', '_')
-        query = models.ExtractedImage.select()
+        query = ExtractedImage.select()
 
-        for i, extractedImage in enumerate(query):
+        to_label = []
 
-            if i % 20 == 0:
-                print("Starting label #%d" % (i))
+        for extractedImage in query:
 
             page = extractedImage.page
             book_title = "".join(
@@ -51,16 +42,59 @@ def labelExtracts(database, repository, models):
                         )
 
             page_path = os.path.join(book_path, "extract")
-            image_path = os.path.join(page_path, page.uuid)
-            image_path += "_" + str(extractedImage.TL_x)
-            image_path += "-" + str(extractedImage.TL_y)
-            image_path += "-" + str(extractedImage.BR_x)
-            image_path += "-" + str(extractedImage.BR_y) + ".jpg"
+            image_path = os.path.join(page_path, page.uuid) + "_"
+            image_path += str(extractedImage.page_coordinate_TL_x) + "-"
+            image_path += str(extractedImage.page_coordinate_TL_y) + "-"
+            image_path += str(extractedImage.page_coordinate_BR_x) + "-"
+            image_path += str(extractedImage.page_coordinate_BR_y) + ".jpg"
 
             if os.path.isfile(image_path):
-                # call labeler function
-                labels = []
-                extractedImage.label = labels
-                extractedImage.save()
+                to_label.append((extractedImage.id, image_path))
 
-    return
+        # Now call the Tensorflow code...
+        for i in range(0, len(to_label), BATCH_SIZE):
+
+            labels = run_classification_batch(to_label[i:i+BATCH_SIZE])
+
+            print("Labelling through %d finished, writing to db..." % (i+BATCH_SIZE))
+            for extract_id in labels:
+
+                extractImage = ExtractedImage.get(ExtractedImage.id == extract_id)
+                extractImage.label = str(labels[extract_id])
+                extractImage.save()
+
+                #  query = models.ExtractedImage.select().where(extract_id == models.ExtractedImage.id)
+                #  for extractedImage in query:
+                #      extractedImage.label = str(labels[extract_id])
+                #      extractedImage.save()
+
+
+def run_classification_batch(inputFiles):
+
+    file_list = []
+    id_list = []
+    labels = {}
+
+    p = re.compile("\d\) ([\w\s]+)")
+
+    for extract_id, fil in inputFiles:
+        file_list.append(fil)
+        id_list.append(extract_id)
+        labels[extract_id] = []
+
+    for i in range(0, len(file_list), 100):
+        classification_output = check_output(
+            RUN_INFERENCE_PATH + " --checkpoint_path=" + CHECKPOINT_PATH +
+            " --vocab_file=" + VOCAB_FILE + " --input_files=" +
+            str(file_list[i:i+100])[1:-1].replace(", ", ",") + "",
+            shell=True
+        )
+
+        img_output = classification_output.decode("utf-8").split("Captions for image")
+        img_output = list(filter(None, img_output))
+
+        for extract_id, img_out in zip(id_list, img_output):
+            for match in re.findall(p, img_out):
+                labels[extract_id].append(match)
+
+    return labels

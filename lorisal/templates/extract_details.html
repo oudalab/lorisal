@@ -1,0 +1,19 @@
+{% extends 'admin/model/details.html' %}
+
+{% block body %}
+	{{ super() }}
+
+	{% set book_path = "/data/" %}
+	{% set book_path = book_path + get_value(model,"page").book.repository.shortname %}
+	{% set book_path = book_path + '/' +  get_value(model,"page").book.title %}
+	{% set yolo_path = book_path + '/yolo/' %}
+	{% set book_path = book_path + '/extract/' %}
+	{% set book_file = '' + get_value(model,"page").uuid + '_' %}
+	{% set book_file = book_file + get_value(model,"page_coordinate_TL_x")|string + '-'  %}
+	{% set book_file = book_file + get_value(model,"page_coordinate_TL_y")|string + '-'  %}
+	{% set book_file = book_file + get_value(model,"page_coordinate_BR_x")|string + '-'  %}
+	{% set book_file = book_file + get_value(model,"page_coordinate_BR_y")|string + '.jpg'  %}
+	<img class="extract-image original" src="{{book_path + book_file}}" width='356' />
+	<img class="extract-image yolo" src="{{yolo_path + book_file}}" width='356' />
+
+{% endblock %}

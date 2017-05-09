@@ -1,13 +1,16 @@
 # from scraper import scraper
 # from extractor import extractor
-from ocr import ocr
-from labeler import labeler
+#  from ocr import ocr
+#  from labeler import labeler
+from tagger import tagger
 import models
 
 RUN_SCRAPER = False
-RUN_OCR = True
 RUN_EXTRACTOR = False
+RUN_OCR = False
+RUN_TAGGER = True
 RUN_LABELER = False
+
 REBUILD = False
 BUILD = False
 
@@ -41,11 +44,14 @@ def main():
     #  if RUN_EXTRACTOR:
     #      extractor.extractFigures(db, repo, models)
 
-    if RUN_OCR:
-        ocr.ocrRepo(db, repo, models)
+    #  if RUN_OCR:
+    #      ocr.ocrRepo(db, repo, models)
 
-    if RUN_LABELER:
-        labeler.labelExtracts(db, repo, models)
+    if RUN_TAGGER:
+        tagger.tagExtracts(db, repo, models)
+
+    #  if RUN_LABELER:
+    #      labeler.labelExtracts(db, repo, models)
 
 
 def buildStructure():
